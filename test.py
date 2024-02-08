@@ -1,6 +1,7 @@
 import os
 import subprocess
 from datetime import datetime, timedelta 
+import fnmatch
 
 def find_modified_md_files():
     '''
@@ -52,9 +53,27 @@ def generate_html_files(md_files):
             subprocess.run(pandoc_cmd)
 
 def add_files_to_git(files):
+    '''
+    This function uses the git add command to add the files to git
+    '''
     git_add = ['git', 'add'] + files
     subprocess.run(git_add)
 
-if __name__ == main:
+def valid_file(directory_with_files, white_list, black_list):
+    md_files = []
+
+    for r, d, f in os.walk(directory_with_files):
+        for file in f:
+            if file.lower().endswith('.md'):
+                filepath = os.path.join(r, file)
+
+                # Check if the file is in the black list or white list
+                if(white_list is None or any(fnmatch.fnmatch(file, pattern) for pattern in white_list)) and (black_list is None or not(fnmatch.fnmatch(file, pattern) for pattern in black_list)):
+                    md_files.append(filepath)
+    return md_files
+
+if __name__ == "__main__":
+    files_to_process = find_modified_md_files() + find_md_files_not_in_repo()
+    generate_html_files(files_to_process)
     if 'pre-commit' in os.environ.get('GET_HOOK_NAME', ''):
-        add_files_to_git([file.replace('.md', '.html') for file in files_process])
+        add_files_to_git([file.replace('.md', '.html') for file in files_to_process])

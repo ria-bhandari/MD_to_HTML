@@ -88,7 +88,7 @@ def add_the_html_file_to_git(html_file_path: str):
 
 def commit_htmlfile(html_file_path: str):
     """
-    This function takes an HTML file payj and commits it to the Git repository with a commit
+    This function takes an HTML file path and commits it to the Git repository with a commit
     message that indicates whether it is an addition or an update of the HTML file. 
     """
     git_commit_cmd = ['git', 'commit', '-m', f'Add/Update the HTML file: {html_file_path}']
