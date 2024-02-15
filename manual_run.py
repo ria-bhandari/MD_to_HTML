@@ -5,7 +5,34 @@ import fnmatch
 import pathlib
 from typing import Iterable
 
+def read_files(file_path: str) -> list[str]:
+    """
+    
+    Keyword arguments:
+    argument -- description
+    Return: return_description
+    """
+    try:
+        with open(file_path, 'r') as file:
+            return file.read().splitlines()
+    except FileNotFoundError:
+        return []
 
+def read_whitelists_and_blacklists() -> tuple[list[str], list[str]]:
+    """
+    
+    Keyword arguments:
+    argument -- description
+    Return: return_description
+    """
+    w_file_path = '\test\whitelist.txt'
+    b_file_path = '\test\blacklist.txt'
+    
+    whitelist = read_files(w_file_path)
+    blacklist = read_files(b_file_path)
+
+    return whitelist, blacklist
+    
 def find_modified_md_files() -> list[str]:
     '''
     This function finds any modified markdown files since the last commit
@@ -36,11 +63,22 @@ def generate_html_files(md_files: list[str]) -> None:
     for md_file in md_files:
         html_file = md_file.replace('.md', '.html')
 
+        if has_markdown_been_modified(md_file, html_file):
         # Use the Pandoc library for conversion
-        pandoc_cmd = ['pandoc', md_file, '-o', html_file]
-        subprocess.run(pandoc_cmd)
+            pandoc_cmd = ['pandoc', md_file, '-o', html_file]
+            subprocess.run(pandoc_cmd)
 
-
+def has_markdown_been_modified(md_file: str, html_file: str) -> bool:
+    """
+    
+    Keyword arguments:
+    argument -- description
+    Return: return_description
+    """
+    markdown_modification_time = os.path.getmtime(md_file)
+    html_modification_time = os.path.getmtime(html_file)
+    return markdown_modification_time > html_modification_time
+    
 def add_files_to_git(files: list[str]) -> None:
     '''
     This function uses the git add command to add the files to git
@@ -72,7 +110,8 @@ def is_approved_file(file_name: os.PathLike, white_list: list[str], black_list: 
 
 
 if __name__ == "__main__":
+    whitelist, blacklist = read_whitelists_and_blacklists()
     files_to_process = find_modified_md_files() + find_md_files_not_in_repo()
     generate_html_files(files_to_process)
-    if 'pre-commit' in os.environ.get('GET_HOOK_NAME', ''):
-        add_files_to_git([file.replace('.md', '.html') for file in files_to_process])
+    # if 'pre-commit' in os.environ.get('GET_HOOK_NAME', ''):
+    #     add_files_to_git([file.replace('.md', '.html') for file in files_to_process])
